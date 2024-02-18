@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+  sflow_collector:
+    image: pmacct/sfacctd:latest
+    restart: always
+    network_mode: host
+    volumes:
+      - ./sfacctd.conf:/etc/pmacct/sfacctd.conf:ro
+      - ./networks.lst:/etc/pmacct/networks.lst:ro
+      - ./peering_agent.map:/etc/pmacct/peering_agent.map:ro
+      - ./pretag.map:/etc/pmacct/pretag.map:ro
+
+  netflow_collector:
+    image: pmacct/nfacctd:latest
+    restart: always
+    network_mode: host
+    volumes:
+      - ./nfacctd.conf:/etc/pmacct/nfacctd.conf:ro
+      - ./networks.lst:/etc/pmacct/networks.lst:ro
+      - ./peering_agent.map:/etc/pmacct/peering_agent.map:ro
+      - ./pretag.map:/etc/pmacct/pretag.map:ro
+
+  flow-consumer:
+    image: serverforge/flow-consumer:v0.0.5-beta
+    depends_on:
+    - kafka
+    - clickhouse
+    network_mode: host
+    restart: always
+    environment:
+      - brokers=localhost:9092
+      - topic=pmacct.acct
+      - database=dankflows
+      - policy=365 DAYS
+
+  zookeeper:
+    image: zookeeper
+    container_name: zookeeper
+    restart: always
+    network_mode: host
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+
+  kafka:
+    image: ubuntu/kafka
+    container_name: kafka
+    restart: always
+    depends_on:
+      - zookeeper
+    network_mode: host
+    environment:
+      - KAFKA_CREATE_TOPICS="pmacct.acct:3:1"
+      - KAFKA_ZOOKEEPER_CONNECT=127.0.0.1:2181
+      - KAFKA_LOG_RETENTION_HOURS=1
+      - ALLOW_PLAINTEXT_LISTENER=yes
+
+  clickhouse:
+    image: clickhouse/clickhouse-server
+    container_name: clickhouse
+    restart: always
+    network_mode: host
+    volumes:
+      - ./clickhouse-data:/var/lib/clickhouse/
+      - ./no_logging.xml:/etc/clickhouse-server/users.d/no_logging.xml
+      - ./disable_all_the_logs.xml:/etc/clickhouse-server/config.d/disable_all_the_logs.xml
+      - ./no_verbose.xml:/etc/clickhouse-server/config.d/no_verbose.xml

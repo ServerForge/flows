@@ -1,0 +1,8 @@
+
+
+
+direction=1 set_tag=1 label=dir_tag 
+direction=0 set_tag=0
+
+direction=1 set_tag=0 label=dir_tag_rev
+direction=0 set_tag=1
