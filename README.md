@@ -2,6 +2,7 @@
 
 
 Simple sFlow/Netflow monitoring setup using Docker,pmacct,ClickHouse, and Kafka.
+This is an early work in progress.
 
 ## Requirements
 
