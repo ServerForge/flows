@@ -22,7 +22,7 @@ services:
       - ./pretag.map:/etc/pmacct/pretag.map:ro
 
   flow-consumer:
-    image: serverforge/flow-consumer:v0.0.5-beta
+    image: serverforge/flow-consumer:v0.0.8-beta
     depends_on:
     - kafka
     - clickhouse
